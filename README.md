@@ -35,6 +35,18 @@ The 256-dimensional style vector at the interpolated point between voices A and 
 
 With 325 voice arcs, ~16.7M interpolation steps per arc, and independent pitch/energy scaling, the combinatorial space exceeds 5.4 billion perceptually distinct voice identities — all derivable from three integers with no stored state.
 
+### Gender Filter
+
+A three-way toggle (Mixed / Female / Male) constrains which voices the hash selects from:
+
+| Mode | Voice Pool | Arcs | Effective Distinct Voices |
+|------|-----------|------|--------------------------|
+| **Mixed** | All 26 voices | 325 | ~5.4 billion |
+| **Female** | 14 voices (af_*, bf_*) | 91 | ~1.5 billion |
+| **Male** | 12 voices (am_*, bm_*) | 66 | ~1.1 billion |
+
+Each pool still has ~16.7M interpolation steps and independent pitch/energy scaling, so even the smallest pool (male, 12 voices) produces over a billion distinct voices. The gender filter is a constraint on selection, not a reduction of the underlying system. Switching back to Mixed restores the full 5.4 billion voice space.
+
 ---
 
 ## Features
@@ -42,6 +54,7 @@ With 325 voice arcs, ~16.7M interpolation steps per arc, and independent pitch/e
 - **Three-column workbench UI** — Coordinate Input, Voice Spec, and Synthesis panels
 - **Instant voice preview** — browser-side xxHash (WASM) gives immediate VoiceSpec feedback on every keystroke
 - **26 Kokoro anchor voices** — American/British, male/female, blended via linear interpolation
+- **Gender filter** — three-way toggle (Mixed/Female/Male) constrains voice selection to gendered pools
 - **Oscilloscope waveform display** — real-time PCM visualization during playback
 - **WAV export** — 16-bit mono 24 kHz WAV download
 - **Parameter overrides** — lock and manually adjust any derived parameter (slerp t, pitch, energy, voice selection)
