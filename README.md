@@ -8,7 +8,7 @@ A deterministic NPC voice synthesis workbench. Every NPC receives a unique, repr
 
 ## How It Works
 
-ZeroVoice uses the **ZeroByte Systems** methodology — position-is-seed procedural generation where spawn coordinates are the only input. Three integers (X, Y, Z) are hashed with xxHash64 using five independent salts to derive five voice properties in O(1):
+ZeroVoice uses the [**ZeroByte Systems** methodology](https://github.com/MushroomFleet/ZeroBytes-Family-Skills) — position-is-seed procedural generation where spawn coordinates are the only input. Three integers (X, Y, Z) are hashed with xxHash64 using five independent salts to derive five voice properties in O(1):
 
 | Property | Derivation |
 |----------|-----------|
