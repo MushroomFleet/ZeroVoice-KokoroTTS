@@ -61,7 +61,7 @@ With 325 voice arcs, ~16.7M interpolation steps per arc, and independent pitch/e
 
 ### Download the MSI (Recommended)
 
-1. Go to [Releases](https://github.com/MushroomFleet/ZeroVoice-KokorotTTS/releases)
+1. Go to [Releases](https://github.com/MushroomFleet/ZeroVoice-KokoroTTS/releases)
 2. Download the latest `ZeroVoice.Workbench_x.x.x_x64_en-US.msi`
 3. Run the installer
 4. Launch **ZeroVoice Workbench** from the Start Menu
@@ -207,7 +207,7 @@ If you use this codebase in your research or project, please cite:
   title = {ZeroVoice: Deterministic NPC Voice Synthesis via Position-as-Seed Procedural Generation with KokoroTTS},
   author = {Drift Johnson},
   year = {2025},
-  url = {https://github.com/MushroomFleet/ZeroVoice-KokorotTTS},
+  url = {https://github.com/MushroomFleet/ZeroVoice-KokoroTTS},
   version = {0.1.0}
 }
 ```
