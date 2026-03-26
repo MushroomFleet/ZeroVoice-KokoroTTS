@@ -123,7 +123,7 @@ Click **EXPORT WAV** to download the audio as a 16-bit 24 kHz mono WAV file. Use
 
 ## ZeroByte Systems — Position-as-Seed Determinism
 
-ZeroVoice implements the [ZeroByte Systems](https://github.com/MushroomFleet/ZeroByte-Systems) methodology for procedural content generation:
+ZeroVoice implements the [ZeroByte Systems Family](https://github.com/MushroomFleet/ZeroBytes-Family-Skills) methodology for procedural content generation:
 
 - **O(1) access** — `voice_from_spawn(x, y, z)` is five xxHash64 calls. No loops, no tables, no iteration.
 - **Zero storage** — NPC voices are never stored. They are recomputed on demand from coordinates alone.
@@ -199,7 +199,7 @@ src/
 - [eSpeak-NG](https://github.com/espeak-ng/espeak-ng) — open-source speech synthesizer used for phonemization
 - [ONNX Runtime](https://onnxruntime.ai/) by Microsoft — cross-platform ML inference
 - [Tauri](https://tauri.app/) — lightweight desktop application framework
-- [ZeroByte Systems](https://github.com/MushroomFleet/ZeroByte-Systems) — position-as-seed procedural generation methodology
+- [ZeroByte Systems Family](https://github.com/MushroomFleet/ZeroBytes-Family-Skills) — position-as-seed procedural generation methodology
 
 ---
 
