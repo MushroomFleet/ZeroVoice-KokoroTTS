@@ -47,6 +47,27 @@ A three-way toggle (Mixed / Female / Male) constrains which voices the hash sele
 
 Each pool still has ~16.7M interpolation steps and independent pitch/energy scaling, so even the smallest pool (male, 12 voices) produces over a billion distinct voices. The gender filter is a constraint on selection, not a reduction of the underlying system. Switching back to Mixed restores the full 5.4 billion voice space.
 
+### Zero-Quadratic Arc Properties
+
+The [Zero-Quadratic](https://github.com/MushroomFleet/ZeroByte-Systems) layer adds a second dimension of determinism: **per-arc character**. Each of the 325 voice arcs is no longer a plain linear interpolation between two endpoints — it has its own unique curvature, harmonic richness, and spectral tilt, all derived from symmetric pair hashes with zero stored data.
+
+Four properties are computed for every voice pair using `pair_hash(sorted_lo, sorted_hi, WORLD_SEED ^ salt)`:
+
+| Property | Range | Effect |
+|----------|-------|--------|
+| **Curve Warp** | [0.2, 0.8] | Remaps the interpolation t through a power curve — the same t value sounds different on every arc |
+| **Harmonic Weight** | [0.0, 0.3] | Blends toward the tonal mean of both voices — higher values produce richer, fuller blends |
+| **Spectral Skew** | [-0.15, +0.15] | Tilts the blend toward one voice even at t=0.5 — adds directional asymmetry |
+| **Kinship** | [0.0, 1.0] | Perceptual similarity between the two anchor voices (geometric, from style vector dot product) |
+
+These properties are visible in the workbench UI under the **ARC CHARACTER** section of the Voice Spec panel. They update in real time as coordinates change, giving audio designers direct insight into why two voices blend the way they do.
+
+**Before Zero-Quadratic:** All 325 arcs were geometrically identical — same linear interpolation path, differing only in their endpoints.
+
+**After Zero-Quadratic:** Each arc has its own curve shape, harmonic envelope, and spectral character. Voices at the same `t` on different arcs sound categorically distinct in more dimensions than before. The perceptual voice space is qualitatively richer while remaining fully deterministic.
+
+The arc table is precomputed at startup in under 11ms with a memory footprint of 10.8 KB. All properties are symmetric (`arc(A,B) == arc(B,A)`) and deterministic from the world seed.
+
 ---
 
 ## Features
@@ -55,6 +76,7 @@ Each pool still has ~16.7M interpolation steps and independent pitch/energy scal
 - **Instant voice preview** — browser-side xxHash (WASM) gives immediate VoiceSpec feedback on every keystroke
 - **26 Kokoro anchor voices** — American/British, male/female, blended via linear interpolation
 - **Gender filter** — three-way toggle (Mixed/Female/Male) constrains voice selection to gendered pools
+- **Zero-Quadratic arc properties** — each voice arc has unique curve warp, harmonic weight, spectral skew, and kinship displayed in the UI
 - **Oscilloscope waveform display** — real-time PCM visualization during playback
 - **WAV export** — 16-bit mono 24 kHz WAV download
 - **Parameter overrides** — lock and manually adjust any derived parameter (slerp t, pitch, energy, voice selection)
@@ -131,28 +153,49 @@ ZeroVoice implements the [ZeroByte Systems Family](https://github.com/MushroomFl
 - **Determinism** — xxHash64 is platform-independent. The same world seed and coordinates produce identical results on any machine, any OS, any time.
 - **Hierarchy** — `WORLD_SEED -> WORLD_SEED ^ SALT -> position_hash -> hash_to_float -> property`
 - **Coherence** — optional regional bias adds smooth geographic variation via bilinear-interpolated noise across the X/Z plane.
+- **O(N^2) Pair Access** — Zero-Quadratic layer derives per-arc properties from symmetric pair hashes over the 26-voice entity set (325 unique pairs)
 
-### How 5.4 Billion Voices Are Derived from 3 Integers
+### How Voices Are Derived — Two Layers of Determinism
+
+**Layer 1 — ZeroBytes (per-NPC, from spawn coordinates):**
 
 ```
 Spawn (X, Y, Z)
     |
     +-- xxHash64(seed ^ SALT_A) --> voice_a index (0-25)
     +-- xxHash64(seed ^ SALT_B) --> voice_b index (0-25, != A)
-    +-- xxHash64(seed ^ SALT_T) --> slerp t (0.0 - 1.0)
+    +-- xxHash64(seed ^ SALT_T) --> interpolation t (0.0 - 1.0)
     +-- xxHash64(seed ^ SALT_P) --> pitch (0.85 - 1.15)
     +-- xxHash64(seed ^ SALT_E) --> energy (0.80 - 1.20)
+```
+
+**Layer 2 — Zero-Quadratic (per-arc, from voice pair):**
+
+```
+Voice Pair (A, B) — sorted for symmetry
     |
-    +--> style_vector = lerp(voice_table[A][token_len], voice_table[B][token_len], t)
+    +-- pair_hash(lo, hi, SALT_ARC_CURVE)    --> curve_warp [0.2, 0.8]
+    +-- pair_hash(lo, hi, SALT_ARC_HARMONIC) --> harmonic_weight [0.0, 0.3]
+    +-- pair_hash(lo, hi, SALT_ARC_SPECTRAL) --> spectral_skew [-0.15, +0.15]
+    +-- dot_product(voice_table[A], voice_table[B]) --> kinship [0.0, 1.0]
+```
+
+**Combined:**
+
+```
+    warped_t = t^(curve_warp*2) / (t^(curve_warp*2) + (1-t)^(curve_warp*2))
+    skewed_t = warped_t + spectral_skew
+    primary  = lerp(voice_table[A][token_len], voice_table[B][token_len], skewed_t)
+    style    = lerp(primary, mean(A, B), harmonic_weight)
     |
     +--> KokoroTTS ONNX inference --> 24 kHz PCM audio
 ```
 
-Each hash output is 64 bits. The lower 32 bits are mapped to floats, giving ~4.29 billion distinct values per property. The five properties are statistically independent (different salts), producing a combinatorial voice space of approximately:
+Each hash output is 64 bits. The five NPC-level properties and three arc-level properties are all statistically independent (different salts), producing a combinatorial voice space of approximately:
 
-> 325 arcs x 16.7M slerp steps x 5M pitch values x 6.7M energy values = **~5.4 x 10^9 distinct voices**
+> 325 arcs x unique arc character x 16.7M interpolation steps x 5M pitch values x 6.7M energy values = **~5.4 x 10^9 distinct voices**
 
-All from `0 bytes` of per-NPC storage.
+With Zero-Quadratic, each of those 325 arcs now sounds categorically different — the same `t` on different arcs produces qualitatively distinct blends. All from `0 bytes` of per-NPC storage.
 
 ---
 
